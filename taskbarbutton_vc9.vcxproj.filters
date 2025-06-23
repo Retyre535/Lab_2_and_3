@@ -24,10 +24,7 @@
     <ClInclude Include="Sequences.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="Deque.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SegmentedBufferDeque.h">
+    <ClInclude Include="Deques.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,6 +1,7 @@
 ﻿#include <wx/wx.h>
 #include <wx/listctrl.h>
 #include "Sequences.h"
+#include "Deques.h"
 
 class SequenceTesterApp : public wxApp {
 public:
@@ -48,7 +49,6 @@ SequenceTesterFrame::SequenceTesterFrame(const wxString& title)
 
     wxBoxSizer* vbox = new wxBoxSizer(wxVERTICAL);
 
-    // Sequence type selection
     wxStaticText* typeLabel = new wxStaticText(panel, wxID_ANY, "Sequence Type:");
     sequenceTypeChoice = new wxChoice(panel, wxID_ANY);
     sequenceTypeChoice->Append("DynamicArray");
@@ -61,6 +61,8 @@ SequenceTesterFrame::SequenceTesterFrame(const wxString& title)
     sequenceTypeChoice->Append("ImmutableArraySequence");
     sequenceTypeChoice->Append("MutableListSequence");
     sequenceTypeChoice->Append("ImmutableListSequence");
+    sequenceTypeChoice->Append("Deque");
+    sequenceTypeChoice->Append("SegmentedBufferDeque");
     sequenceTypeChoice->SetSelection(0);
 
     wxBoxSizer* typeSizer = new wxBoxSizer(wxHORIZONTAL);
@@ -68,17 +70,14 @@ SequenceTesterFrame::SequenceTesterFrame(const wxString& title)
     typeSizer->Add(sequenceTypeChoice, 1);
     vbox->Add(typeSizer, 0, wxEXPAND | wxLEFT | wxRIGHT | wxTOP, 10);
 
-    // Input
     wxStaticText* inputLabel = new wxStaticText(panel, wxID_ANY, "Input (comma separated integers):");
     inputText = new wxTextCtrl(panel, wxID_ANY, "1,2,3,4,5", wxDefaultPosition, wxDefaultSize);
     vbox->Add(inputLabel, 0, wxLEFT | wxRIGHT | wxTOP, 10);
     vbox->Add(inputText, 0, wxEXPAND | wxLEFT | wxRIGHT, 10);
 
-    // Test button
     testButton = new wxButton(panel, ID_TestButton, "Run Tests");
     vbox->Add(testButton, 0, wxALIGN_CENTER | wxTOP | wxBOTTOM, 10);
 
-    // Results
     resultList = new wxListCtrl(panel, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_REPORT | wxLC_SINGLE_SEL);
     resultList->InsertColumn(0, "Operation", wxLIST_FORMAT_LEFT, 300);
     resultList->InsertColumn(1, "Result", wxLIST_FORMAT_LEFT, 600);
@@ -98,7 +97,6 @@ void SequenceTesterFrame::OnTestButtonClick(wxCommandEvent& event) {
 }
 
 void SequenceTesterFrame::TestSequence(wxString sequenceType, wxString input) {
-    // Parse input
     wxArrayString inputItems = wxSplit(input, ',');
     if (inputItems.IsEmpty()) {
         wxMessageBox("Please enter some numbers separated by commas", "Error", wxOK | wxICON_ERROR);
@@ -149,7 +147,6 @@ void SequenceTesterFrame::TestSequence(wxString sequenceType, wxString input) {
             arr[0] = 100;
             AddIntResult("After operator[] set", arr[0]);
 
-            // Test exception
             try {
                 arr.Get(100);
             }
@@ -191,7 +188,6 @@ void SequenceTesterFrame::TestSequence(wxString sequenceType, wxString input) {
             AddIntResult("Concat size", concatList->GetSize());
             delete concatList;
 
-            // Test exception
             try {
                 list.Get(100);
             }
@@ -233,33 +229,27 @@ void SequenceTesterFrame::TestSequence(wxString sequenceType, wxString input) {
             AddIntResult("Concat size", concatSeq->GetSize());
             delete concatSeq;
 
-            // Test Map
             Sequence<int>* mappedSeq = seq.Map([](int x) { return x * 2; });
             AddIntResult("Map (*2) first element", mappedSeq->GetFirst());
             delete mappedSeq;
 
-            // Test TryGet
             int value;
             bool found = seq.TryGet(1, value);
             AddBoolResult("TryGet(1) success", found);
             if (found) AddIntResult("TryGet(1) value", value);
 
-            // Test TryFind
             found = seq.TryFind([](int x) { return x == 99; }, value);
             AddBoolResult("TryFind(x == 99) success", found);
             if (found) AddIntResult("TryFind value", value);
 
-            // Test From
             Sequence<int>* fromSeq = seq.From(seq);
             AddIntResult("From size", fromSeq->GetSize());
             delete fromSeq;
 
-            // Test Zip
             Sequence<int>* zippedSeq = seq.Zip(seq);
             AddIntResult("Zip size", zippedSeq->GetSize());
             delete zippedSeq;
 
-            // Test exception
             try {
                 seq.Get(100);
             }
@@ -301,33 +291,27 @@ void SequenceTesterFrame::TestSequence(wxString sequenceType, wxString input) {
             AddIntResult("Concat size", concatSeq->GetSize());
             delete concatSeq;
 
-            // Test Map
             Sequence<int>* mappedSeq = seq.Map([](int x) { return x * 2; });
             AddIntResult("Map (*2) first element", mappedSeq->GetFirst());
             delete mappedSeq;
 
-            // Test TryGet
             int value;
             bool found = seq.TryGet(1, value);
             AddBoolResult("TryGet(1) success", found);
             if (found) AddIntResult("TryGet(1) value", value);
 
-            // Test TryFind
             found = seq.TryFind([](int x) { return x == 99; }, value);
             AddBoolResult("TryFind(x == 99) success", found);
             if (found) AddIntResult("TryFind value", value);
 
-            // Test From
             Sequence<int>* fromSeq = seq.From(seq);
             AddIntResult("From size", fromSeq->GetSize());
             delete fromSeq;
 
-            // Test Zip
             Sequence<int>* zippedSeq = seq.Zip(seq);
             AddIntResult("Zip size", zippedSeq->GetSize());
             delete zippedSeq;
 
-            // Test exception
             try {
                 seq.Get(100);
             }
@@ -354,7 +338,6 @@ void SequenceTesterFrame::TestSequence(wxString sequenceType, wxString input) {
             AddIntResult("After Insert(99, 2) size", seq.GetSize());
             AddIntResult("Element at index 2", seq.Get(2));
 
-            // Force switch to list by adding many elements
             if (seq.GetSize() < AdaptiveSequenceSwitch) {
                 for (int i = 0; i < AdaptiveSequenceSwitch; i++) {
                     seq.Append(i);
@@ -378,33 +361,27 @@ void SequenceTesterFrame::TestSequence(wxString sequenceType, wxString input) {
             AddIntResult("Concat size", concatSeq->GetSize());
             delete concatSeq;
 
-            // Test Map
             Sequence<int>* mappedSeq = seq.Map([](int x) { return x * 2; });
             AddIntResult("Map (*2) first element", mappedSeq->GetFirst());
             delete mappedSeq;
 
-            // Test TryGet
             int value;
             bool found = seq.TryGet(1, value);
             AddBoolResult("TryGet(1) success", found);
             if (found) AddIntResult("TryGet(1) value", value);
 
-            // Test TryFind
             found = seq.TryFind([](int x) { return x == 99; }, value);
             AddBoolResult("TryFind(x == 99) success", found);
             if (found) AddIntResult("TryFind value", value);
 
-            // Test From
             Sequence<int>* fromSeq = seq.From(seq);
             AddIntResult("From size", fromSeq->GetSize());
             delete fromSeq;
 
-            // Test Zip
             Sequence<int>* zippedSeq = seq.Zip(seq);
             AddIntResult("Zip size", zippedSeq->GetSize());
             delete zippedSeq;
 
-            // Test exception
             try {
                 seq.Get(100000);
             }
@@ -434,7 +411,6 @@ void SequenceTesterFrame::TestSequence(wxString sequenceType, wxString input) {
             AddIntResult("After Insert(99, 2) size", list.GetSize());
             AddIntResult("Element at index 2", list.Get(2));
 
-            // Test segment splitting
             for (int i = 0; i < 50; i++) {
                 list.Append(i);
             }
@@ -455,33 +431,27 @@ void SequenceTesterFrame::TestSequence(wxString sequenceType, wxString input) {
             AddIntResult("Concat size", concatSeq->GetSize());
             delete concatSeq;
 
-            // Test Map
             Sequence<int>* mappedSeq = list.Map([](int x) { return x * 2; });
             AddIntResult("Map (*2) first element", mappedSeq->GetFirst());
             delete mappedSeq;
 
-            // Test TryGet
             int value;
             bool found = list.TryGet(1, value);
             AddBoolResult("TryGet(1) success", found);
             if (found) AddIntResult("TryGet(1) value", value);
 
-            // Test TryFind
             found = list.TryFind([](int x) { return x == 99; }, value);
             AddBoolResult("TryFind(x == 99) success", found);
             if (found) AddIntResult("TryFind value", value);
 
-            // Test From
             Sequence<int>* fromSeq = list.From(list);
             AddIntResult("From size", fromSeq->GetSize());
             delete fromSeq;
 
-            // Test Zip
             Sequence<int>* zippedSeq = list.Zip(list);
             AddIntResult("Zip size", zippedSeq->GetSize());
             delete zippedSeq;
 
-            // Test exception
             try {
                 list.Get(100000);
             }
@@ -496,7 +466,6 @@ void SequenceTesterFrame::TestSequence(wxString sequenceType, wxString input) {
             AddIntResult("First element", seq->GetFirst());
             AddIntResult("Last element", seq->GetLast());
 
-            // ��������� �������������� ��������
             seq->Append(10);
             AddIntResult("After Append(10) size", seq->GetSize());
             AddIntResult("Last element", seq->GetLast());
@@ -509,22 +478,18 @@ void SequenceTesterFrame::TestSequence(wxString sequenceType, wxString input) {
             AddIntResult("After Insert(99, 2) size", seq->GetSize());
             AddIntResult("Element at index 2", seq->Get(2));
 
-            // ��������� ����������� �����������
             MutableArraySequence<int> seqCopy(*seq);
             AddIntResult("Copy constructor size", seqCopy.GetSize());
             AddIntResult("Copy first element", seqCopy.GetFirst());
 
-            // ��������� Instance() - ������ ���������� this
             Sequence<int>* instance = seq->Instance();
             AddBoolResult("Instance is same object", (instance == seq));
 
-            // ��������� Clone()
             Sequence<int>* cloned = seq->Clone();
             AddIntResult("Clone size", cloned->GetSize());
             AddIntResult("Clone first element", cloned->GetFirst());
             delete cloned;
 
-            // ��������� �����...
             delete seq;
         }
         else if (sequenceType == "ImmutableArraySequence") {
@@ -534,7 +499,6 @@ void SequenceTesterFrame::TestSequence(wxString sequenceType, wxString input) {
             AddIntResult("First element", seq->GetFirst());
             AddIntResult("Last element", seq->GetLast());
 
-            // ��� immutable ������������������ �������� ������ ���������� ����� ����������
             Sequence<int>* appendedSeq = seq->Clone();
             appendedSeq->Append(10);
             AddIntResult("After Append(10) size", appendedSeq->GetSize());
@@ -557,17 +521,14 @@ void SequenceTesterFrame::TestSequence(wxString sequenceType, wxString input) {
             AddIntResult("SubSequence(1,3) size", subSeq->GetSize());
             delete subSeq;
 
-            // �������� ������������ �����������
             ImmutableArraySequence<int> seqCopy(*seq);
             AddIntResult("Copy constructor size", seqCopy.GetSize());
             AddIntResult("Copy first element", seqCopy.GetFirst());
 
-            // �������� Instance() - ������ ���������� ����
             Sequence<int>* instance = seq->Instance();
             AddBoolResult("Instance is different object", (instance != seq));
             delete instance;
 
-            // ��������� �����...
             delete seq;
         }
         else if (sequenceType == "MutableListSequence") {
@@ -577,7 +538,6 @@ void SequenceTesterFrame::TestSequence(wxString sequenceType, wxString input) {
             AddIntResult("First element", seq->GetFirst());
             AddIntResult("Last element", seq->GetLast());
 
-            // ��������� �������������� ��������
             seq->Append(10);
             AddIntResult("After Append(10) size", seq->GetSize());
             AddIntResult("Last element", seq->GetLast());
@@ -590,22 +550,18 @@ void SequenceTesterFrame::TestSequence(wxString sequenceType, wxString input) {
             AddIntResult("After Insert(99, 2) size", seq->GetSize());
             AddIntResult("Element at index 2", seq->Get(2));
 
-            // ��������� ����������� �����������
             MutableListSequence<int> seqCopy(*seq);
             AddIntResult("Copy constructor size", seqCopy.GetSize());
             AddIntResult("Copy first element", seqCopy.GetFirst());
 
-            // ��������� Instance() - ������ ���������� this
             Sequence<int>* instance = seq->Instance();
             AddBoolResult("Instance is same object", (instance == seq));
 
-            // ��������� Clone()
             Sequence<int>* cloned = seq->Clone();
             AddIntResult("Clone size", cloned->GetSize());
             AddIntResult("Clone first element", cloned->GetFirst());
             delete cloned;
 
-            // ��������� �����...
             delete seq;
         }
         else if (sequenceType == "ImmutableListSequence") {
@@ -615,7 +571,6 @@ void SequenceTesterFrame::TestSequence(wxString sequenceType, wxString input) {
             AddIntResult("First element", seq->GetFirst());
             AddIntResult("Last element", seq->GetLast());
 
-            // ��� immutable ������������������ �������� ������ ���������� ����� ����������
             Sequence<int>* appendedSeq = seq->Clone();
             appendedSeq->Append(10);
             AddIntResult("After Append(10) size", appendedSeq->GetSize());
@@ -638,19 +593,246 @@ void SequenceTesterFrame::TestSequence(wxString sequenceType, wxString input) {
             AddIntResult("SubSequence(1,3) size", subSeq->GetSize());
             delete subSeq;
 
-            // �������� ������������ �����������
             ImmutableListSequence<int> seqCopy(*seq);
             AddIntResult("Copy constructor size", seqCopy.GetSize());
             AddIntResult("Copy first element", seqCopy.GetFirst());
 
-            // �������� Instance() - ������ ���������� ����
             Sequence<int>* instance = seq->Instance();
             AddBoolResult("Instance is different object", (instance != seq));
             delete instance;
 
-            // ��������� �����...
             delete seq;
         }
+        else if (sequenceType == "Deque") {
+            Deque<int> deque(items, (int)inputItems.GetCount());
+
+            AddIntResult("Initial size", deque.GetSize());
+            AddBoolResult("IsEmpty", deque.IsEmpty());
+            AddIntResult("First element (PeekFront)", deque.PeekFront());
+            AddIntResult("Last element (PeekBack)", deque.PeekBack());
+
+            //Deque<int> randomPerm = Deque<int>::GenerateRandomPermutation(5);
+            //AddResult("Random permutation of size 5", randomPerm.ToString().c_str());
+
+            deque.PushFront(0);
+            AddIntResult("After PushFront(0) size", deque.GetSize());
+            AddIntResult("First element after PushFront", deque.PeekFront());
+
+            deque.PushBack(10);
+            AddIntResult("After PushBack(10) size", deque.GetSize());
+            AddIntResult("Last element after PushBack", deque.PeekBack());
+
+            int front = deque.PopFront();
+            AddIntResult("Popped front element", front);
+            AddIntResult("Size after PopFront", deque.GetSize());
+
+            int back = deque.PopBack();
+            AddIntResult("Popped back element", back);
+            AddIntResult("Size after PopBack", deque.GetSize());
+
+            AddIntResult("Element at index 1 (Get)", deque.Get(1));
+            AddIntResult("Element at index 1 (operator[])", deque[1]);
+
+            Deque<int> subDeque = deque.GetSubDeque(1, deque.GetSize() - 1);
+            AddIntResult("SubDeque(1, size-1) size", subDeque.GetSize());
+
+            Deque<int> otherDeque(items, 2);
+            Deque<int>* concatDeque = deque.Concat(&otherDeque);
+            AddIntResult("ConcatDeque size", concatDeque->GetSize());
+            delete concatDeque;
+
+            Deque<int> mappedDeque = deque;
+            for (int i = 0; i < mappedDeque.GetSize(); i++) {
+                mappedDeque[i] = mappedDeque[i] * 2;
+            }
+            AddResult("Mapped (*2)", mappedDeque.ToString().c_str());
+
+            Deque<int> filtered = deque.Where([](int x) { return x % 2 == 0; });
+            AddResult("Filtered (even)", filtered.ToString().c_str());
+
+            int sum = 0;
+            for (int i = 0; i < deque.GetSize(); i++) {
+                sum += deque.Get(i);
+            }
+            AddIntResult("Reduce (sum)", sum);
+
+            deque.Sort();
+            AddResult("After default sorting", deque.ToString().c_str());
+            deque.Sort([](const int& a, const int& b) { return a > b; });
+            AddResult("After descending sorting", deque.ToString().c_str());
+
+            AddIntResult("Inversions (Multi-Pass)", deque.CountInversionsMultiPass());
+            AddIntResult("Inversions (Single-Pass)", deque.CountInversionsSinglePass());
+
+            Deque<int> range = Deque<int>::Range(1, 20);
+            AddResult("Range(1,20)", range.ToString().c_str());
+
+            Deque<int> primes = range.Where([](int n) { return Deque<int>::IsPrime(n); });
+            AddResult("Primes in range", primes.ToString().c_str());
+
+            int numToFactor = 60;
+            Deque<int> factors = Deque<int>::Factorize(numToFactor);
+            AddResult(wxString::Format("Factors of %d", numToFactor), factors.ToString().c_str());
+
+            Deque<int> primeFactors = Deque<int>::PrimeFactorization(numToFactor);
+            AddResult(wxString::Format("Prime factors of %d", numToFactor), primeFactors.ToString().c_str());
+
+            int sieveLimit = 30;
+            Deque<int> sievePrimes = Deque<int>::SieveOfEratosthenes(sieveLimit);
+            AddResult(wxString::Format("Primes up to %d (Sieve)", sieveLimit), sievePrimes.ToString().c_str());
+
+            deque.Clear();
+            AddIntResult("After Clear size", deque.GetSize());
+            AddBoolResult("IsEmpty after Clear", deque.IsEmpty());
+
+            try {
+                deque.PopFront();
+            }
+            catch (const IndexOutOfRange& e) {
+                AddResult("Exception test PopFront", "Correctly caught IndexOutOfRange on empty deque");
+            }
+
+            try {
+                deque.PopBack();
+            }
+            catch (const IndexOutOfRange& e) {
+                AddResult("Exception test PopBack", "Correctly caught IndexOutOfRange on empty deque");
+            }
+
+            try {
+                deque.PeekFront();
+            }
+            catch (const IndexOutOfRange& e) {
+                AddResult("Exception test PeekFront", "Correctly caught IndexOutOfRange on empty deque");
+            }
+
+            try {
+                deque.PeekBack();
+            }
+            catch (const IndexOutOfRange& e) {
+                AddResult("Exception test PeekBack", "Correctly caught IndexOutOfRange on empty deque");
+            }
+
+            try {
+                deque.Get(100);
+            }
+            catch (const IndexOutOfRange& e) {
+                AddResult("Exception test Get", "Correctly caught IndexOutOfRange");
+            }
+            }
+        else if (sequenceType == "SegmentedBufferDeque") {
+                SegmentedBufferDeque<int> deque;
+                for (size_t i = 0; i < inputItems.GetCount(); i++) {
+                    deque.PushBack(items[i]);
+                }
+
+
+                AddIntResult("Initial size", deque.GetSize());
+                AddBoolResult("IsEmpty", deque.IsEmpty());
+                AddIntResult("First element (PeekFront)", deque.PeekFront());
+                AddIntResult("Last element (PeekBack)", deque.PeekBack());
+                auto randomPermSeg = SegmentedBufferDeque<int>::GenerateRandomPermutation(5);
+                AddResult("Random permutation of size 5", randomPermSeg.ToString().c_str());
+
+                deque.PushFront(0);
+                AddIntResult("After PushFront(0) size", deque.GetSize());
+                AddIntResult("First element after PushFront", deque.PeekFront());
+
+                deque.PushBack(10);
+                AddIntResult("After PushBack(10) size", deque.GetSize());
+                AddIntResult("Last element after PushBack", deque.PeekBack());
+
+                int front = deque.PopFront();
+                AddIntResult("Popped front element", front);
+                AddIntResult("Size after PopFront", deque.GetSize());
+
+                int back = deque.PopBack();
+                AddIntResult("Popped back element", back);
+                AddIntResult("Size after PopBack", deque.GetSize());
+
+                AddIntResult("Element at index 1 (Get)", deque.Get(1));
+                AddIntResult("Element at index 1 (operator[])", deque[1]);
+
+                auto subDeque = deque.GetSubSegmentedBufferDeque(1, deque.GetSize() - 1);
+                AddIntResult("SubDeque(1, size-1) size", subDeque.GetSize());
+
+                auto mapped = deque.Map([](int x) { return x * 2; });
+                auto mappedDeque = dynamic_cast<SegmentedBufferDeque<int>*>(mapped);
+                if (mappedDeque) {
+                    AddResult("Mapped (*2)", mappedDeque->ToString().c_str());
+                }
+                delete mapped;
+
+                auto filtered = deque.Where([](int x) { return x % 2 == 0; });
+                AddResult("Filtered (even)", filtered.ToString().c_str());
+
+                int sum = deque.Reduce([](int a, int b) { return a + b; }, 0);
+                AddIntResult("Reduce (sum)", sum);
+
+                deque.Sort();
+                AddResult("After default sorting", deque.ToString().c_str());
+                deque.Sort([](const int& a, const int& b) { return a > b; });
+                AddResult("After descending sorting", deque.ToString().c_str());
+
+                AddIntResult("Inversions (Multi-Pass)", deque.CountInversionsMultiPass());
+                AddIntResult("Inversions (Single-Pass)", deque.CountInversionsSinglePass());
+
+                auto numbers = SegmentedBufferDeque<int>::Range(1, 20);
+                AddResult("Range(1,20)", numbers.ToString().c_str());
+
+                auto primes = numbers.Where([](int n) {
+                    return SegmentedBufferDeque<int>::IsPrime(n);
+                    });
+                AddResult("Primes in range", primes.ToString().c_str());
+
+                auto factors = SegmentedBufferDeque<int>::Factorize(60);
+                AddResult("Factors of 60", factors.ToString().c_str());
+
+                auto primeFactors = SegmentedBufferDeque<int>::PrimeFactorization(60);
+                AddResult("Prime factors of 60", primeFactors.ToString().c_str());
+
+                auto sieve = SegmentedBufferDeque<int>::SieveOfEratosthenes(100);
+                AddResult("Primes up to 100 (Sieve)", sieve.ToString().c_str());
+
+                deque.Clear();
+                AddIntResult("After Clear size", deque.GetSize());
+                AddBoolResult("IsEmpty after Clear", deque.IsEmpty());
+
+                try {
+                    deque.PopFront();
+                }
+                catch (const IndexOutOfRange& e) {
+                    AddResult("Exception test PopFront", "Correctly caught IndexOutOfRange on empty deque");
+                }
+
+                try {
+                    deque.PopBack();
+                }
+                catch (const IndexOutOfRange& e) {
+                    AddResult("Exception test PopBack", "Correctly caught IndexOutOfRange on empty deque");
+                }
+
+                try {
+                    deque.PeekFront();
+                }
+                catch (const IndexOutOfRange& e) {
+                    AddResult("Exception test PeekFront", "Correctly caught IndexOutOfRange on empty deque");
+                }
+
+                try {
+                    deque.PeekBack();
+                }
+                catch (const IndexOutOfRange& e) {
+                    AddResult("Exception test PeekBack", "Correctly caught IndexOutOfRange on empty deque");
+                }
+
+                try {
+                    deque.Get(100);
+                }
+                catch (const IndexOutOfRange& e) {
+                    AddResult("Exception test Get", "Correctly caught IndexOutOfRange");
+                }
+                }
     }
     catch (const IndexOutOfRange& e) {
         AddResult("Error", e.what());

@@ -196,6 +196,9 @@ private:
     }
 
 public:
+
+    Node* GetHead() const { return head; }
+
     LinkedList() : head(nullptr), tail(nullptr), size(0) {}
 
     LinkedList(T* items, int count) : LinkedList() {
@@ -824,6 +827,7 @@ private:
         int currentPos = 0;
         for (int i = 0; i < segments.GetSize(); i++) {
             DynamicArray<T>* segment = segments.Get(i);
+            if (!segment) throw std::runtime_error("Segment is null");
             if (index < currentPos + segment->GetSize()) {
                 return { segment, index - currentPos };
             }
@@ -885,14 +889,14 @@ public:
     T GetFirst() override {
         if (segments.GetSize() == 0) throw IndexOutOfRange();
         DynamicArray<T>* firstSegment = segments.Get(0);
-        if (firstSegment->GetSize() == 0) throw IndexOutOfRange();
+        if (!firstSegment || firstSegment->GetSize() == 0) throw IndexOutOfRange();
         return (*firstSegment)[0];
     }
 
     T GetLast() override {
         if (segments.GetSize() == 0) throw IndexOutOfRange();
         DynamicArray<T>* lastSegment = segments.Get(segments.GetSize() - 1);
-        if (lastSegment->GetSize() == 0) throw IndexOutOfRange();
+        if (!lastSegment || lastSegment->GetSize() == 0) throw IndexOutOfRange();
         return (*lastSegment)[lastSegment->GetSize() - 1];
     }
 
@@ -1042,6 +1046,13 @@ public:
 
     Sequence<T>* Clone() const override {
         return new SegmentedList<T>(*this);
+    }
+
+    void Clear() {
+        for (int i = 0; i < segments.GetSize(); i++) {
+            delete segments.Get(i);
+        }
+        segments = LinkedList<DynamicArray<T>*>();
     }
 };
 
