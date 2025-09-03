@@ -1,4 +1,4 @@
-#ifndef SEQUENCES_H
+﻿#ifndef SEQUENCES_H
 #define SEQUENCES_H
 
 #include <iostream>
@@ -56,7 +56,7 @@ public:
 };
 
 template <class T>
-class DynamicArray{
+class DynamicArray {
 private:
     T* data;
     int size;
@@ -98,7 +98,7 @@ public:
         return size;
     }
 
-    T Get(int index) const  {
+    T Get(int index) const {
         if (index < 0 || index >= size) {
             throw IndexOutOfRange();
         }
@@ -140,7 +140,7 @@ public:
         return data[index];
     }
 
-    void Append(T item)  {
+    void Append(T item) {
         Resize(GetSize() + 1);
         data[GetSize() - 1] = item;
     }
@@ -175,7 +175,7 @@ public:
 };
 
 template <class T>
-class LinkedList{
+class LinkedList {
 private:
     struct Node {
         T data;
@@ -196,6 +196,9 @@ private:
     }
 
 public:
+
+    Node* GetHead() const { return head; }
+
     LinkedList() : head(nullptr), tail(nullptr), size(0) {}
 
     LinkedList(T* items, int count) : LinkedList() {
@@ -234,7 +237,7 @@ public:
         return tail->data;
     }
 
-    T Get(int index) const  {
+    T Get(int index) const {
         return GetNode(index)->data;
     }
 
@@ -246,7 +249,7 @@ public:
         return GetNode(index)->data;
     }
 
-    int GetSize() const  {
+    int GetSize() const {
         return size;
     }
 
@@ -261,7 +264,7 @@ public:
         return subList;
     }
 
-    void Append(T item)  {
+    void Append(T item) {
         Node* newNode = new Node(item);
         if (head == nullptr) {
             head = tail = newNode;
@@ -273,7 +276,7 @@ public:
         size++;
     }
 
-    void Prepend(T item)  {
+    void Prepend(T item) {
         head = new Node(item, head);
         if (tail == nullptr) {
             tail = head;
@@ -281,7 +284,7 @@ public:
         size++;
     }
 
-    void Insert(T item, int index)  {
+    void Insert(T item, int index) {
         if (index < 0 || index > size) {
             throw IndexOutOfRange();
         }
@@ -345,7 +348,7 @@ public:
         array = new DynamicArray<T>(0);
     }
 
-    ArraySequence(T* items, int count){
+    ArraySequence(T* items, int count) {
         array = new DynamicArray<T>(items, count);
     }
 
@@ -421,17 +424,13 @@ public:
         return newSequence;
     }
 
-    Sequence<T>* From(const Sequence<T>& other) override{
+    Sequence<T>* From(const Sequence<T>& other) override {
         Sequence<T>* result = new ArraySequence<T>();
         for (int i = 0; i < other.GetSize(); ++i) {
             result->Append(other.Get(i));
         }
         return result;
     }
-    
-    // Tuple<T,T> == Pair<T>
-    // zip: Tuple<Sequence<T>, Sequence<T>> -> Sequence<Tuple<T,T>>
-    // unzip: Sequence<Tuple<T,T>> -> Tuple<Sequence<T>, Sequence<T>>
 
     Sequence<T>* Zip(const Sequence<T>& other) const override {
         ArraySequence<T>* result = new ArraySequence<T>();
@@ -443,13 +442,6 @@ public:
         return result;
     }
 
-    //Optional<T> TryGet(int index) override {
-    //    if (index < 0 || index >= array->GetSize()) {
-    //        return Optional::None();
-    //    }
-    //    auto value = array->Get(index);
-    //    return Optional<T>(value);
-    //}
     bool TryGet(int index, T& value) override {
         if (index < 0 || index >= array->GetSize()) {
             return false;
@@ -620,7 +612,7 @@ public:
         }
         return result;
     }
-    
+
     bool TryGet(int index, T& value) override {
         if (index < 0 || index >= GetSize()) {
             return false;
@@ -780,7 +772,7 @@ public:
         return sequence->Map(func);
     }
 
-    Sequence<T>* From(const Sequence<T>& other) override{
+    Sequence<T>* From(const Sequence<T>& other) override {
         AdaptiveSequence<T>* result = new AdaptiveSequence<T>();
         for (int i = 0; i < other.GetSize(); ++i) {
             result->Append(other.Get(i));
@@ -835,6 +827,7 @@ private:
         int currentPos = 0;
         for (int i = 0; i < segments.GetSize(); i++) {
             DynamicArray<T>* segment = segments.Get(i);
+            if (!segment) throw std::runtime_error("Segment is null");
             if (index < currentPos + segment->GetSize()) {
                 return { segment, index - currentPos };
             }
@@ -896,14 +889,14 @@ public:
     T GetFirst() override {
         if (segments.GetSize() == 0) throw IndexOutOfRange();
         DynamicArray<T>* firstSegment = segments.Get(0);
-        if (firstSegment->GetSize() == 0) throw IndexOutOfRange();
+        if (!firstSegment || firstSegment->GetSize() == 0) throw IndexOutOfRange();
         return (*firstSegment)[0];
     }
 
     T GetLast() override {
         if (segments.GetSize() == 0) throw IndexOutOfRange();
         DynamicArray<T>* lastSegment = segments.Get(segments.GetSize() - 1);
-        if (lastSegment->GetSize() == 0) throw IndexOutOfRange();
+        if (!lastSegment || lastSegment->GetSize() == 0) throw IndexOutOfRange();
         return (*lastSegment)[lastSegment->GetSize() - 1];
     }
 
@@ -1053,6 +1046,13 @@ public:
 
     Sequence<T>* Clone() const override {
         return new SegmentedList<T>(*this);
+    }
+
+    void Clear() {
+        for (int i = 0; i < segments.GetSize(); i++) {
+            delete segments.Get(i);
+        }
+        segments = LinkedList<DynamicArray<T>*>();
     }
 };
 
